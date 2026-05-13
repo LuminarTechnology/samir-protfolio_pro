@@ -27,11 +27,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x02030a, 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.78;
+renderer.toneMappingExposure = 0.74;     // -0.04 to compensate for bigger meshes
 
 // ── scene & camera ──────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x02030a, 0.038);
+scene.fog = new THREE.FogExp2(0x02030a, 0.033);   // slight lift — bigger objects stay legible
 
 const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 240);
 camera.position.set(0, 0.4, 28);
@@ -58,7 +58,7 @@ composer.addPass(new RenderPass(scene, camera));
 
 const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.42, 0.75, 0.55
+  0.26, 0.35, 0.65
 );
 composer.addPass(bloom);
 
@@ -241,9 +241,9 @@ const particleMat = new THREE.ShaderMaterial({
       vec2 uv = gl_PointCoord - 0.5;
       float d = length(uv);
       // tighter core, lighter halo — keeps individual sparks readable
-      float core = smoothstep(0.5, 0.05, d);
-      float halo = smoothstep(0.5, 0.22, d) * 0.25;
-      float a = core * core * 0.75 + halo * 0.22;
+      float core = smoothstep(0.5, 0.10, d);
+      float halo = smoothstep(0.5, 0.32, d) * 0.14;
+      float a = core * core * 0.90 + halo * 0.10;
       if (a < 0.01) discard;
       vec3 col = vColor * (0.40 + 0.45 * vGlow);    // overall tone -25%
       gl_FragColor = vec4(col, a);
@@ -335,7 +335,7 @@ function stackedTextTargets(lines) {
 // cut-gem silhouette — plus a sparse dusting on the faces so it reads as
 // a solid diamond rather than a hollow wireframe.
 function diamondTargets() {
-  const r = 1.55, yScale = 1.32;     // was r=2.2 — same proportions, ~30% smaller
+  const r = 1.85, yScale = 1.32;     // +19% — diamond now sized like the IV globe
   const v = [
     [0,  r * yScale, 0],   // top apex
     [0, -r * yScale, 0],   // bottom apex (culet)
@@ -383,90 +383,39 @@ function diamondTargets() {
   return pointsToTargets(pts);
 }
 
-function icosahedronTargets() {
-  // Clarity, before scale — particles crystallize into a precise icosahedron:
-  // dense vertex nodes, edge-traced silhouette, a softer inner shell, and a
-  // thin outer mist. Reads as a "mind", not a fuzzy cloud.
-  const phi = (1 + Math.sqrt(5)) / 2;
-  const verts = [
-    [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
-    [ 0, -1,  phi], [ 0,  1,  phi], [ 0, -1, -phi], [ 0,  1, -phi],
-    [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1],
-  ];
-  const R = 1.75;                    // was 2.4 — quieter, more readable
-  const s = R / Math.hypot(1, phi);
-  for (const v of verts) { v[0] *= s; v[1] *= s; v[2] *= s; }
+function torusKnotTargets() {
+  // Clarity, before scale — particles trace the (5,3) torus knot: one clean
+  // equation, one continuous strand. Signal. No noise.
+  const P = 5, Q = 3, R = 1.70, r = 0.62;     // +13% to match the IV globe
+  const curvePts = [], volumePts = [];
 
-  const edges = [
-    [0,1],[0,5],[0,7],[0,10],[0,11],
-    [1,5],[1,7],[1,8],[1,9],
-    [2,3],[2,4],[2,6],[2,10],[2,11],
-    [3,4],[3,6],[3,8],[3,9],
-    [4,5],[4,9],[4,11],
-    [5,9],[5,11],
-    [6,7],[6,8],[6,10],
-    [7,8],[7,10],
-    [8,9],
-    [10,11],
-  ];
+  // Dense samples along the curve itself — the silhouette the eye reads
+  const N = 2600;
+  for (let i = 0; i < N; i++) {
+    const t = (i / N) * Math.PI * 2;
+    const x = (R + r * Math.cos(Q * t)) * Math.cos(P * t);
+    const y = (R + r * Math.cos(Q * t)) * Math.sin(P * t);
+    const z = r * Math.sin(Q * t);
+    curvePts.push([x, y, z]);
+  }
 
-  const vertPts = [], edgePts = [], innerPts = [], mistPts = [];
-
-  // dense vertex nodes — "synapses"
-  for (const v of verts) {
-    for (let i = 0; i < 70; i++) {
-      const r = 0.10 * Math.cbrt(Math.random());
-      const t = Math.random() * Math.PI * 2;
-      const ph = Math.acos(2 * Math.random() - 1);
-      vertPts.push([
-        v[0] + r * Math.sin(ph) * Math.cos(t),
-        v[1] + r * Math.sin(ph) * Math.sin(t),
-        v[2] + r * Math.cos(ph),
-      ]);
-    }
-  }
-  // edges — silhouette
-  for (const [i, j] of edges) {
-    const a = verts[i], b = verts[j];
-    for (let k = 0; k < 80; k++) {
-      const tt = k / 80;
-      edgePts.push([
-        a[0] + (b[0] - a[0]) * tt,
-        a[1] + (b[1] - a[1]) * tt,
-        a[2] + (b[2] - a[2]) * tt,
-      ]);
-    }
-  }
-  // inner shell at 55% scale — second tier of structure
-  const inner = 0.55;
-  for (const [i, j] of edges) {
-    const a = verts[i], b = verts[j];
-    for (let k = 0; k < 30; k++) {
-      const tt = k / 30;
-      innerPts.push([
-        (a[0] + (b[0] - a[0]) * tt) * inner,
-        (a[1] + (b[1] - a[1]) * tt) * inner,
-        (a[2] + (b[2] - a[2]) * tt) * inner,
-      ]);
-    }
-  }
-  // soft outer mist — atmosphere, not chaos
-  for (let i = 0; i < 600; i++) {
-    const r = R * 1.18 + (Math.random() - 0.5) * 0.18;
+  // Sparse tube-volume scatter — slight depth so it reads as a strand, not a wire
+  for (let i = 0; i < 500; i++) {
     const t = Math.random() * Math.PI * 2;
-    const ph = Math.acos(2 * Math.random() - 1);
-    mistPts.push([
-      r * Math.sin(ph) * Math.cos(t),
-      r * Math.sin(ph) * Math.sin(t),
-      r * Math.cos(ph),
+    const x = (R + r * Math.cos(Q * t)) * Math.cos(P * t);
+    const y = (R + r * Math.cos(Q * t)) * Math.sin(P * t);
+    const z = r * Math.sin(Q * t);
+    const scatter = 0.14;
+    volumePts.push([
+      x + (Math.random() - 0.5) * scatter,
+      y + (Math.random() - 0.5) * scatter,
+      z + (Math.random() - 0.5) * scatter,
     ]);
   }
 
   const buckets = [
-    { src: edgePts,  weight: 0.42, jitter: 0.020 },
-    { src: vertPts,  weight: 0.22, jitter: 0.025 },
-    { src: innerPts, weight: 0.18, jitter: 0.020 },
-    { src: mistPts,  weight: 0.18, jitter: 0.060 },
+    { src: curvePts,  weight: 0.84, jitter: 0.016 },
+    { src: volumePts, weight: 0.16, jitter: 0.030 },
   ];
 
   const arr = new Float32Array(PARTICLE_COUNT * 3);
@@ -489,8 +438,9 @@ function icosahedronTargets() {
 
 function PYRAMID_DIMENSIONS() {
   // Great-Pyramid-ish proportions: slender, premium, never squat.
-  // Scaled down ~30% so the spire reads as elegant, not monumental.
-  return { baseY: -2.4, peakY: 3.6, halfBase: 2.45 };
+  // Final parity pass — sized so the silhouette feels comparable to the
+  // Vision globe and Legacy crystal of the other chapters.
+  return { baseY: -2.80, peakY: 4.20, halfBase: 2.85 };
 }
 
 function pyramidTargets() {
@@ -649,8 +599,8 @@ function visionTargets() {
   // Particles distribute across a luminous WIREFRAME GLOBE plus a single
   // tilted orbital ring. The world he sees + the orbit around it.
   const arr = new Float32Array(PARTICLE_COUNT * 3);
-  const GLOBE_R = 1.45;
-  const RING_R  = 2.05;
+  const GLOBE_R = 1.55;             // +7% — kept close to the chapter that's "fine"
+  const RING_R  = 2.18;
   const RING_TILT = 0.42;
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -688,47 +638,68 @@ function visionTargets() {
 
 // ── companion geometry per chapter ──────────────────────────────────────────
 
-// CHAPTER II — neural core: inner crystalline mass + mid wireframe shell.
-// The particle icosahedron forms the outer silhouette; these provide depth.
+// CHAPTER II — Luminous (5,3) Torus Knot: signal traced by a single continuous curve.
+// "Clarity, before scale. Signal over noise." — one equation, infinite complexity.
+// Five winds around the axis, three around the tube: the knot of pure thought.
 const aiGroup = new THREE.Group();
-const aiCore = new THREE.Mesh(
-  new THREE.IcosahedronGeometry(0.62, 3),
-  new THREE.MeshPhysicalMaterial({
-    color: 0x0a141e, emissive: 0x2c7e98, emissiveIntensity: 0.55,
-    metalness: 1.0, roughness: 0.18,
-    clearcoat: 1.0, clearcoatRoughness: 0.05,
-    transmission: 0.30, ior: 1.45, thickness: 1.2,
-    transparent: true, opacity: 0.95,
-  })
-);
-const aiWire = new THREE.Mesh(
-  new THREE.IcosahedronGeometry(0.96, 1),
-  new THREE.MeshBasicMaterial({ color: 0x6ef0ff, wireframe: true, transparent: true, opacity: 0.22 })
-);
-aiGroup.add(aiCore, aiWire);
-
-for (let i = 0; i < 4; i++) {
-  const torus = new THREE.Mesh(
-    new THREE.TorusGeometry(2.5 + i * 0.55, 0.014, 14, 220),
-    new THREE.MeshStandardMaterial({
-      color: 0xdde8f4,
-      emissive: i % 2 ? 0x6650a8 : 0x2c8eb0,
-      emissiveIntensity: 0.45,
-      metalness: 1.0,
-      roughness: 0.18,
-      transparent: true,
-      opacity: 0.55,
+{
+  // Main knot tube — slim, metallic, glowing from within
+  const knotMesh = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(1.70, 0.056, 400, 10, 5, 3),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x040e1a, emissive: 0x1e7498, emissiveIntensity: 0.90,
+      metalness: 1.0, roughness: 0.05,
+      clearcoat: 1.0, clearcoatRoughness: 0.02,
+      transparent: true, opacity: 0.94,
     })
   );
-  torus.rotation.x = Math.random() * Math.PI;
-  torus.rotation.y = Math.random() * Math.PI;
-  torus.rotation.z = Math.random() * Math.PI;
-  torus.userData.spin = new THREE.Vector3(
-    0.10 + Math.random() * 0.25,
-    0.08 + Math.random() * 0.25,
-    0.06 + Math.random() * 0.18,
+  aiGroup.add(knotMesh);
+  aiGroup.userData.knotMesh = knotMesh;
+
+  // Wider, additive glow halo — makes the tube luminous under bloom
+  const knotGlow = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(1.70, 0.096, 400, 8, 5, 3),
+    new THREE.MeshBasicMaterial({
+      color: 0x6ef0ff, transparent: true, opacity: 0.13,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    })
   );
-  aiGroup.add(torus);
+  aiGroup.add(knotGlow);
+  aiGroup.userData.knotGlow = knotGlow;
+
+  // 15 signal nodes distributed along the curve — signal propagating
+  const NK_P = 5, NK_Q = 3, NK_R = 1.70, NK_r = 0.62;
+  for (let i = 0; i < 15; i++) {
+    const t = (i / 15) * Math.PI * 2;
+    const nx = (NK_R + NK_r * Math.cos(NK_Q * t)) * Math.cos(NK_P * t);
+    const ny = (NK_R + NK_r * Math.cos(NK_Q * t)) * Math.sin(NK_P * t);
+    const nz = NK_r * Math.sin(NK_Q * t);
+    const node = new THREE.Mesh(
+      new THREE.SphereGeometry(0.058, 10, 10),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending })
+    );
+    node.position.set(nx, ny, nz);
+    node.userData.isKnotNode = true;
+    node.userData.nodePhase = i * (Math.PI * 2 / 15);
+    aiGroup.add(node);
+  }
+
+  // Subtle central core — the consciousness at the knot's heart
+  const mindCore = new THREE.Mesh(
+    new THREE.SphereGeometry(0.10, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xa0eeff, blending: THREE.AdditiveBlending })
+  );
+  mindCore.userData.isCore = true;
+  aiGroup.add(mindCore);
+
+  const mindHalo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.34, 16, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0x6ef0ff, transparent: true, opacity: 0.11,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    })
+  );
+  aiGroup.add(mindHalo);
 }
 aiGroup.visible = false;
 scene.add(aiGroup);
@@ -976,8 +947,8 @@ scene.add(cityGroup);
 // A single luminous wireframe world with a tilted orbital ring sweeping
 // through it. Far more readable than the old multi-ring sphere of blur.
 const visionGroup = new THREE.Group();
-const VIS_GLOBE_R = 1.45;
-const VIS_RING_R  = 2.05;
+const VIS_GLOBE_R = 1.55;
+const VIS_RING_R  = 2.18;
 const VIS_RING_TILT = 0.42;
 
 // 1. translucent glass interior — gives the globe a body behind the wires
@@ -1087,7 +1058,7 @@ scene.add(visionGroup);
 // ── Chapter V — Legacy crystal (refractive gem inside the particle silhouette)
 const legacyGroup = new THREE.Group();
 const legacyCrystal = new THREE.Mesh(
-  new THREE.OctahedronGeometry(1.42, 0),
+  new THREE.OctahedronGeometry(1.70, 0),
   new THREE.MeshPhysicalMaterial({
     color: 0xeaf6ff,
     metalness: 0.0,
@@ -1108,7 +1079,7 @@ legacyGroup.add(legacyCrystal);
 
 // faint wire overlay so the silhouette is unmistakable even through fog
 const legacyWire = new THREE.Mesh(
-  new THREE.OctahedronGeometry(1.45, 0),
+  new THREE.OctahedronGeometry(1.73, 0),
   new THREE.MeshBasicMaterial({
     color: 0x6ef0ff, wireframe: true,
     transparent: true, opacity: 0.32,
@@ -1119,7 +1090,7 @@ legacyGroup.add(legacyWire);
 
 // concentric halo rings — a soft Saturn-like ring system around the gem
 for (let i = 0; i < 3; i++) {
-  const r = 2.1 + i * 0.40;          // was 3.0 + i*0.55 — tighter, more intimate
+  const r = 2.48 + i * 0.47;          // +19% to match the bigger crystal
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(r, 0.008, 10, 240),
     new THREE.MeshStandardMaterial({
@@ -1141,12 +1112,14 @@ legacyGroup.visible = false;
 scene.add(legacyGroup);
 
 // ── camera anchor poses per chapter ─────────────────────────────────────────
+// Final parity-pass anchors — every chapter's hero object lands at roughly
+// the same screen coverage so the experience reads as one consistent universe.
 const camPaths = [
-  { pos: new THREE.Vector3(0,  0.5, 28), look: new THREE.Vector3(0,  0.0, 0) }, // I  Origin
-  { pos: new THREE.Vector3(2.6, 1.0, 13), look: new THREE.Vector3(0,  0.0, 0) }, // II Mind
-  { pos: new THREE.Vector3(0,  1.2, 20), look: new THREE.Vector3(0,  0.8, 0) }, // III Build
-  { pos: new THREE.Vector3(7.0, 1.6, 14), look: new THREE.Vector3(0, 0.0, 0) }, // IV Vision
-  { pos: new THREE.Vector3(0,  0.5, 17), look: new THREE.Vector3(0, 0.0, 0) },  // V  Legacy (Crystal)
+  { pos: new THREE.Vector3(0,   0.4, 24), look: new THREE.Vector3(0,  0.0, 0) }, // I  Origin
+  { pos: new THREE.Vector3(2.4, 0.9, 11), look: new THREE.Vector3(0,  0.0, 0) }, // II Mind
+  { pos: new THREE.Vector3(0,   1.1, 17), look: new THREE.Vector3(0,  0.6, 0) }, // III Build
+  { pos: new THREE.Vector3(6.5, 1.4, 13), look: new THREE.Vector3(0,  0.0, 0) }, // IV Vision
+  { pos: new THREE.Vector3(0,   0.4, 14), look: new THREE.Vector3(0,  0.0, 0) }, // V  Legacy (Crystal)
 ];
 
 // ── targets, populated after fonts load (so canvas sampling renders Inter) ──
@@ -1170,10 +1143,10 @@ async function buildTargets() {
   TARGETS[0] = pointsToTargets(
     sampleText('SAMIR', {
       fontSize: 360, fontWeight: 800, letterSpacing: '0.04em',
-      density: 3, width: 2200, height: 500, scale: 0.0090,   // was 0.0125
+      density: 3, width: 2200, height: 500, scale: 0.0107,   // +19% bump for parity
     })
   );
-  TARGETS[1] = icosahedronTargets();
+  TARGETS[1] = torusKnotTargets();
   TARGETS[2] = pyramidTargets();
   TARGETS[3] = visionTargets();
   // Chapter V — the Legacy Emblem (a crystalline diamond) replaces the
@@ -1184,7 +1157,7 @@ async function buildTargets() {
   TARGETS[5] = pointsToTargets(
     sampleText('@', {
       fontSize: 620, fontWeight: 500, letterSpacing: '0em',
-      density: 3, width: 900, height: 900, scale: 0.0098, depth: 0.30,  // was 0.014
+      density: 3, width: 900, height: 900, scale: 0.0116, depth: 0.30,  // +18% bump
     })
   );
   // initial section
@@ -1358,7 +1331,7 @@ function frame() {
       // per-section accent color & bloom feel — kept conservative everywhere
       const accents = [0x6ef0ff, 0x6ef0ff, 0xb38bff, 0xdfe7ef, 0x6ef0ff, 0x6ef0ff];
       particleMat.uniforms.uAccent.value.setHex(accents[idx]);
-      bloom.strength = idx === 4 ? 0.55 : 0.42;
+      bloom.strength = idx === 4 ? 0.36 : 0.24;
     }
 
     // mix curve: form FAST, hold LONG, dissolve LATE.
@@ -1396,24 +1369,21 @@ function frame() {
     // at roughly 80% of the viewport width — strong, hero-sized presence.
     if (idx === 3) {
       const phase = t * 0.045 + local * 0.25;
-      const orbit = 5.5;
+      const orbit = 5.9;          // +0.4 to keep coverage steady with bigger globe
       tmpPos.x = Math.cos(phase) * orbit + mouse.x * 0.3;
       tmpPos.z = Math.sin(phase) * orbit;
       tmpPos.y = 0.5 + mouse.y * 0.3;
       tmpLook.set(0, 0, 0);
     }
-    // chapter V: slow, deliberate push-in from a wide framing so the
-    // stacked "SAMIR / HASAN" reveals cleanly without clipping.
+    // chapter V: slow, intimate framing on the Legacy Crystal — gem-sized,
+    // gem-paced. A very gentle drift so its facets catch new highlights as
+    // the user lingers, ending closer than it began (push-in reveal).
     if (idx === 4) {
       const eased = smoothstep(0, 1, local);
-      tmpPos.x = mouse.x * 0.35;
-      tmpPos.y = mouse.y * 0.25;
-      // Slow, intimate framing on the Legacy Crystal — a very gentle drift
-      // so the gem's facets catch new highlights as the user lingers.
-      const phase = t * 0.07 + local * 0.4;
-      tmpPos.x = Math.sin(phase) * 0.9 + mouse.x * 0.4;
-      tmpPos.y = 0.5 + mouse.y * 0.25;
-      tmpPos.z = 18 - eased * 2.5;       // 18 → 15.5 (closer reveal)
+      const phase = t * 0.06 + local * 0.35;
+      tmpPos.x = Math.sin(phase) * 0.8 + mouse.x * 0.35;
+      tmpPos.y = 0.45 + mouse.y * 0.25;
+      tmpPos.z = 15 - eased * 2.0;       // 15 → 13 (closer reveal)
       tmpLook.set(0, 0, 0);
     }
     // contact: hold a clean, wide framing on the @ so the form sits in front of it
@@ -1459,20 +1429,22 @@ function frame() {
       });
     }
     if (aiGroup.visible) {
-      aiGroup.rotation.y += dt * 0.18;
-      aiCore.rotation.x  += dt * 0.45;
-      aiCore.rotation.y  += dt * 0.35;
-      aiWire.rotation.x  -= dt * 0.25;
-      aiWire.rotation.y  -= dt * 0.30;
+      const { knotMesh, knotGlow } = aiGroup.userData;
+      // Slow yaw — reveals every twist of the knot's path
+      aiGroup.rotation.y += dt * 0.11;
+      aiGroup.rotation.x  = Math.sin(t * 0.22) * 0.14;
+      // Knot and glow counter-rotate on z — creates a shimmer along the curve
+      if (knotMesh) knotMesh.rotation.z += dt * 0.07;
+      if (knotGlow) knotGlow.rotation.z -= dt * 0.04;
+      // Signal nodes pulse in sequence — propagating wave of light
       aiGroup.children.forEach((c) => {
-        if (c.userData.spin instanceof THREE.Vector3) {
-          c.rotation.x += c.userData.spin.x * dt;
-          c.rotation.y += c.userData.spin.y * dt;
-          c.rotation.z += c.userData.spin.z * dt;
+        if (c.userData.isKnotNode) {
+          const ph = c.userData.nodePhase || 0;
+          c.scale.setScalar(0.65 + 0.35 * Math.sin(t * 3.8 + ph));
         }
+        if (c.userData.isCore) c.scale.setScalar(1.0 + 0.22 * Math.sin(t * 2.0));
       });
-      // breathing scale tied to mix
-      const breathe = 0.92 + 0.08 * Math.sin(t * 1.6);
+      const breathe = 0.92 + 0.08 * Math.sin(t * 1.4);
       const s = breathe * (0.6 + 0.4 * particleMat.uniforms.uMix.value);
       aiGroup.scale.setScalar(s);
     }
@@ -1538,8 +1510,11 @@ function frame() {
       legacyGroup.scale.setScalar(s);
     }
 
-    // gentle particle field rotation gives sense of life everywhere
-    particles.rotation.y += dt * 0.012;
+    // Particle field stays at rotation 0 so any text-shape target ("SAMIR"
+    // in chapter I, "@" in the contact section) always reads forwards.
+    // The vertex shader's per-particle sin/cos drift already provides
+    // ambient motion — we don't need a global Y rotation to look alive.
+    particles.rotation.y = 0;
   }
 
   composer.render();
