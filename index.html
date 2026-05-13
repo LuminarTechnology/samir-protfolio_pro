@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#02030a" />
+  <title>Samir Hasan — Founder &amp; CEO, Luminar Technology</title>
+  <meta name="description" content="The personal portfolio of Samir Hasan — founder and CEO of Luminar Technology. Builder, operator, leader." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="grain"></div>
+  <div id="vignette"></div>
+
+  <div id="loader" aria-hidden="true">
+    <div class="loader-mark">◇</div>
+    <div class="loader-text">SAMIR&nbsp;HASAN</div>
+    <div class="loader-bar"><span></span></div>
+  </div>
+
+  <header class="brand">
+    <span class="mark">◇</span>
+    <span class="word">SAMIR&nbsp;HASAN</span>
+    <span class="sub">CEO · LUMINAR&nbsp;TECHNOLOGY</span>
+  </header>
+
+  <nav class="dots" aria-label="Sections">
+    <button data-i="0" class="dot active" aria-label="Genesis"></button>
+    <button data-i="1" class="dot" aria-label="Intelligence"></button>
+    <button data-i="2" class="dot" aria-label="Innovation"></button>
+    <button data-i="3" class="dot" aria-label="Vision"></button>
+    <button data-i="4" class="dot" aria-label="Legacy"></button>
+  </nav>
+
+  <main class="story">
+    <section class="chapter" data-i="0">
+      <p class="kicker">I · ORIGIN</p>
+      <h1>From a single point of light.</h1>
+      <p class="lede">Every company begins as one idea, one founder, one decision to begin. This is the story of Samir Hasan — and the company he set in motion.</p>
+    </section>
+
+    <section class="chapter" data-i="1">
+      <p class="kicker">II · MIND</p>
+      <h1>Clarity, before scale.</h1>
+      <p class="lede">Every decision he makes follows one instinct — signal over noise. A founder's discipline shapes everything downstream: measured, deliberate, alive.</p>
+    </section>
+
+    <section class="chapter" data-i="2">
+      <p class="kicker">III · BUILD</p>
+      <h1>Architecture of ambition.</h1>
+      <p class="lede">Products, platforms, partnerships. Each spire rises from the same foundation — the work compounds, and a city of capability takes shape under one vision.</p>
+    </section>
+
+    <section class="chapter" data-i="3">
+      <p class="kicker">IV · VISION</p>
+      <h1>A horizon worth orbiting.</h1>
+      <p class="lede">Leadership is the choice of direction — and the patience to bring others with you, one revolution at a time. Samir leads from the centre of that orbit.</p>
+    </section>
+
+    <section class="chapter centered" data-i="4">
+      <p class="kicker top">V · LEGACY</p>
+      <div class="legacy-credit">
+        <p class="founded"><strong>FOUNDER · CEO</strong>&nbsp;&nbsp;·&nbsp;&nbsp;LUMINAR&nbsp;TECHNOLOGY</p>
+        <p class="lede small">A founder's signature, written in the future tense.</p>
+        <p class="scroll-down">↓ &nbsp;CONTINUE&nbsp;THE&nbsp;PORTFOLIO</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── CEO portfolio sections ───────────────────────────────────────── -->
+  <div class="content">
+
+    <section class="profile-section" id="founder">
+      <p class="kicker accent">THE&nbsp;FOUNDER</p>
+      <div class="profile-grid">
+        <aside class="profile-portrait">
+          <div class="portrait-frame">
+            <img src="./samir.jpg" alt="Samir Hasan, CEO of Luminar Technology"
+                 class="portrait-img"
+                 onerror="this.classList.add('missing'); this.nextElementSibling.classList.add('show');" />
+            <div class="portrait-placeholder">S</div>
+            <span class="portrait-corner tl"></span>
+            <span class="portrait-corner tr"></span>
+            <span class="portrait-corner bl"></span>
+            <span class="portrait-corner br"></span>
+          </div>
+          <p class="portrait-caption">SAMIR&nbsp;HASAN</p>
+          <p class="portrait-role">CEO &nbsp;·&nbsp; LUMINAR&nbsp;TECHNOLOGY</p>
+        </aside>
+
+        <div class="profile-text">
+          <h2>Builder. Operator. Founder.</h2>
+          <p class="bio">
+            Samir Hasan is the Chief Executive Officer of Luminar Technology — a
+            technology company building intelligent products at the intersection
+            of software, automation and design. He leads strategy, product
+            direction and the long arc of the company's growth.
+          </p>
+          <p class="bio">
+            His work is shaped by a single conviction: that the best technology
+            disappears into the lives it improves. Under his leadership, Luminar
+            has grown from a single idea into a multi-team operation, partnering
+            with clients and collaborators across continents.
+          </p>
+
+          <div class="stats">
+            <div class="stat">
+              <span class="num">10<em>+</em></span>
+              <span class="lbl">Years building</span>
+            </div>
+            <div class="stat">
+              <span class="num">50<em>+</em></span>
+              <span class="lbl">Products shipped</span>
+            </div>
+            <div class="stat">
+              <span class="num">3</span>
+              <span class="lbl">Continents served</span>
+            </div>
+            <div class="stat">
+              <span class="num">1</span>
+              <span class="lbl">North star</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ventures" id="ventures">
+      <p class="kicker accent">VENTURES</p>
+      <h2 class="section-title">Where the work lives.</h2>
+      <p class="section-sub">The companies, products and partnerships Samir builds and backs.</p>
+
+      <div class="venture-grid">
+        <article class="venture-card primary">
+          <div class="venture-mark">◇</div>
+          <p class="venture-tag">FLAGSHIP</p>
+          <h3>Luminar Technology</h3>
+          <p>Parent company. Building software and AI-driven products for enterprises that refuse to compromise on craft.</p>
+          <a class="venture-link" href="#">Explore →</a>
+        </article>
+
+        <article class="venture-card">
+          <div class="venture-mark">◇</div>
+          <p class="venture-tag">PRODUCT</p>
+          <h3>Luminar Studio</h3>
+          <p>Design and engineering practice — bespoke digital products for founders and growth-stage teams.</p>
+          <a class="venture-link" href="#">Explore →</a>
+        </article>
+
+        <article class="venture-card">
+          <div class="venture-mark">◇</div>
+          <p class="venture-tag">RESEARCH</p>
+          <h3>Luminar Labs</h3>
+          <p>An applied R&amp;D arm exploring automation, intelligent systems and the next generation of work tools.</p>
+          <a class="venture-link" href="#">Explore →</a>
+        </article>
+
+        <article class="venture-card">
+          <div class="venture-mark">◇</div>
+          <p class="venture-tag">INVESTMENTS</p>
+          <h3>Portfolio &amp; Advisory</h3>
+          <p>Selective early-stage investments and board roles across software, fintech and creative tooling.</p>
+          <a class="venture-link" href="#">Explore →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="milestones" id="milestones">
+      <p class="kicker accent">TIMELINE</p>
+      <h2 class="section-title">Selected milestones.</h2>
+      <p class="section-sub">Moments that shaped the journey from first idea to a company carrying a name in light.</p>
+
+      <ol class="timeline">
+        <li>
+          <time>2014</time>
+          <div class="t-body">
+            <h4>First lines of code, shipped to the world</h4>
+            <p>The earliest projects — solo builds and freelance commissions — quietly establishing a personal standard for craft.</p>
+          </div>
+        </li>
+        <li>
+          <time>2017</time>
+          <div class="t-body">
+            <h4>Founding team takes shape</h4>
+            <p>Hand-picked collaborators join. The first product line begins to find its market.</p>
+          </div>
+        </li>
+        <li>
+          <time>2020</time>
+          <div class="t-body">
+            <h4>Luminar Technology incorporated</h4>
+            <p>The company is formally founded with Samir Hasan as CEO. A unified brand and a long-term thesis are set in motion.</p>
+          </div>
+        </li>
+        <li>
+          <time>2022</time>
+          <div class="t-body">
+            <h4>First enterprise partnerships</h4>
+            <p>Multi-year engagements with category-leading clients. The team grows; the studio practice formalises.</p>
+          </div>
+        </li>
+        <li>
+          <time>2024</time>
+          <div class="t-body">
+            <h4>Luminar Labs spins up</h4>
+            <p>Applied research arm formed to explore intelligent systems and the next wave of product surface area.</p>
+          </div>
+        </li>
+        <li class="now">
+          <time>Today</time>
+          <div class="t-body">
+            <h4>The next chapter</h4>
+            <p>A multi-team operation across continents — building, investing and leading at the intersection of design and intelligence.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="contact" id="contact">
+      <p class="kicker accent">GET&nbsp;IN&nbsp;TOUCH</p>
+      <h2 class="section-title">Begin a conversation.</h2>
+      <p class="section-sub">For partnerships, press, speaking engagements or a private introduction.</p>
+
+      <div class="contact-grid">
+        <a class="contact-card" href="mailto:samir@luminartechnology.com">
+          <span class="c-lbl">EMAIL</span>
+          <span class="c-val">samir@luminartechnology.com</span>
+        </a>
+        <a class="contact-card" href="#" target="_blank" rel="noopener">
+          <span class="c-lbl">LINKEDIN</span>
+          <span class="c-val">/in/samirhasan</span>
+        </a>
+        <a class="contact-card" href="#" target="_blank" rel="noopener">
+          <span class="c-lbl">X · TWITTER</span>
+          <span class="c-val">@samirhasan</span>
+        </a>
+        <a class="contact-card" href="https://luminartechnology.com" target="_blank" rel="noopener">
+          <span class="c-lbl">COMPANY</span>
+          <span class="c-val">luminartechnology.com</span>
+        </a>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="mark">◇</span>
+        <span>SAMIR&nbsp;HASAN</span>
+      </div>
+      <p>© <span id="year"></span> Samir Hasan · Founder &amp; CEO, Luminar Technology. All rights reserved.</p>
+    </footer>
+
+  </div>
+
+  <div class="canvas-scrim"></div>
+
+  <footer class="meta">
+    <span class="scroll-cta">SCROLL&nbsp;TO&nbsp;ENTER</span>
+    <span class="copyright">© SAMIR&nbsp;HASAN</span>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
